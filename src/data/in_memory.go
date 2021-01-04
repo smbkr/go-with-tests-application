@@ -1,4 +1,4 @@
-package data_store
+package data
 
 import "errors"
 
