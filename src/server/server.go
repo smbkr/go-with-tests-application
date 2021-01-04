@@ -28,8 +28,8 @@ func (p *PlayerServer) handleWin(w http.ResponseWriter, player string) {
 }
 
 func (p *PlayerServer) handlePlayerScore(w http.ResponseWriter, player string) {
-	score, err := p.Store.GetPlayerScore(player)
-	if err != nil {
+	score := p.Store.GetPlayerScore(player)
+	if score == 0 {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -37,6 +37,6 @@ func (p *PlayerServer) handlePlayerScore(w http.ResponseWriter, player string) {
 }
 
 type PlayerStore interface {
-	GetPlayerScore(name string) (int, error)
+	GetPlayerScore(name string) int
 	RecordWin(name string)
 }

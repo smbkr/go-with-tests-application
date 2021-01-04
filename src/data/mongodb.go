@@ -16,19 +16,20 @@ type MongoPlayerStore struct {
 	Client *mongo.Client
 }
 
-// TODO: change to int, bool (found)
-func (s *MongoPlayerStore) GetPlayerScore(name string) (int, error) {
+func (s *MongoPlayerStore) GetPlayerScore(name string) int {
 	player := Player{}
 	err := s.Client.
 		Database("game").
 		Collection("players").
-		FindOne(context.TODO(), bson.D{{"name", name}}).
+		FindOne(context.TODO(), bson.M{"name": name}).
 		Decode(&player)
 	if err != nil {
-		log.Print(err)
-		return 0, err
+		if err != mongo.ErrNoDocuments {
+			log.Fatal(err)
+		}
 	}
-	return player.Score, nil
+
+	return player.Score
 }
 
 func (s *MongoPlayerStore) RecordWin(name string) {
@@ -36,7 +37,7 @@ func (s *MongoPlayerStore) RecordWin(name string) {
 	collection := s.Client.
 		Database("game").
 		Collection("players")
-	filter := bson.D{{"name", name}}
+	filter := bson.M{"name": name}
 	update := bson.M{"$inc": bson.M{"score": 1}}
 	result := collection.FindOneAndUpdate(ctx, filter, update)
 	err := result.Err()

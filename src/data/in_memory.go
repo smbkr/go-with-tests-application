@@ -1,7 +1,5 @@
 package data
 
-import "errors"
-
 type InMemoryPlayerStore struct {
 	scores map[string]int
 }
@@ -12,12 +10,8 @@ func NewInMemoryPlayerStore() *InMemoryPlayerStore {
 	}
 }
 
-func (s *InMemoryPlayerStore) GetPlayerScore(name string) (int, error) {
-	score, found := s.scores[name]
-	if !found {
-		return 0, errors.New("not found")
-	}
-	return score, nil
+func (s *InMemoryPlayerStore) GetPlayerScore(name string) int {
+	return s.scores[name]
 }
 
 func (s *InMemoryPlayerStore) RecordWin(name string) {

@@ -1,7 +1,6 @@
 package server
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -98,12 +97,9 @@ type StubPlayerStore struct {
 	winCalls []string
 }
 
-func (s *StubPlayerStore) GetPlayerScore(name string) (int, error) {
-	score, found := s.scores[name]
-	if !found {
-		return 0, errors.New("not found")
-	}
-	return score, nil
+func (s *StubPlayerStore) GetPlayerScore(name string) int {
+	score := s.scores[name]
+	return score
 }
 
 func (s *StubPlayerStore) RecordWin(name string) {
