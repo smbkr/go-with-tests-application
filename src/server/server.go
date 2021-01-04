@@ -7,28 +7,44 @@ import (
 )
 
 type PlayerServer struct {
-	Store PlayerStore
+	store PlayerStore
+	http.Handler
 }
 
-func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func NewPlayerServer(store PlayerStore) *PlayerServer {
+	p := &PlayerServer{}
+	p.store = store
+	router := http.NewServeMux()
+	router.Handle("/league", http.HandlerFunc(p.leagueHandler))
+	router.Handle("/players/", http.HandlerFunc(p.playerHandler))
+	p.Handler = router
+
+	return p
+}
+
+func (p *PlayerServer) leagueHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+}
+
+func (p *PlayerServer) playerHandler(w http.ResponseWriter, r *http.Request) {
 	player := strings.TrimPrefix(r.URL.Path, "/players/")
 
 	switch r.Method {
 	case http.MethodPost:
-		p.handleWin(w, player)
+		p.playerWinHandler(w, player)
 	case http.MethodGet:
-		p.handlePlayerScore(w, player)
+		p.playerScoreHandler(w, player)
 	}
 }
 
-func (p *PlayerServer) handleWin(w http.ResponseWriter, player string) {
-	p.Store.RecordWin(player)
+func (p *PlayerServer) playerWinHandler(w http.ResponseWriter, player string) {
+	p.store.RecordWin(player)
 	w.WriteHeader(http.StatusAccepted)
 	return
 }
 
-func (p *PlayerServer) handlePlayerScore(w http.ResponseWriter, player string) {
-	score := p.Store.GetPlayerScore(player)
+func (p *PlayerServer) playerScoreHandler(w http.ResponseWriter, player string) {
+	score := p.store.GetPlayerScore(player)
 	if score == 0 {
 		w.WriteHeader(http.StatusNotFound)
 		return

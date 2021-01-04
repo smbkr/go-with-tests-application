@@ -7,15 +7,14 @@ import (
 	"testing"
 )
 
-func TestGETPlayers(t *testing.T) {
-	server := &PlayerServer{
-		Store: &StubPlayerStore{
-			scores: map[string]int{
-				"Pepper": 20,
-				"Floyd":  10,
-			},
+func TestGetPlayerScore(t *testing.T) {
+	store := &StubPlayerStore{
+		scores: map[string]int{
+			"Pepper": 20,
+			"Floyd":  10,
 		},
 	}
+	server := NewPlayerServer(store)
 
 	t.Run(`returns score for "Pepper"`, func(t *testing.T) {
 		response := httptest.NewRecorder()
@@ -41,11 +40,11 @@ func TestGETPlayers(t *testing.T) {
 	})
 }
 
-func TestAddScore(t *testing.T) {
-	store := StubPlayerStore{
+func TestAddPlayerScore(t *testing.T) {
+	store := &StubPlayerStore{
 		scores: map[string]int{},
 	}
-	server := &PlayerServer{&store}
+	server := NewPlayerServer(store)
 
 	t.Run("records wins", func(t *testing.T) {
 		player := "Pepper"
@@ -63,6 +62,20 @@ func TestAddScore(t *testing.T) {
 		if store.winCalls[0] != player {
 			t.Errorf("RecordWin called with incorrect player name %q, expected %q", store.winCalls[0], player)
 		}
+	})
+}
+
+func TestLeague(t *testing.T) {
+	store := &StubPlayerStore{}
+	server := NewPlayerServer(store)
+
+	t.Run("it returns 200 for /league", func(t *testing.T) {
+		response := httptest.NewRecorder()
+		request, _ := http.NewRequest(http.MethodGet, "/league", nil)
+
+		server.ServeHTTP(response, request)
+
+		assertStatus(t, response, http.StatusOK)
 	})
 }
 
