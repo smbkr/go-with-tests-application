@@ -4,6 +4,7 @@ import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 )
 
@@ -13,12 +14,12 @@ type Player struct {
 }
 
 type MongoPlayerStore struct {
-	Client *mongo.Client
+	client *mongo.Client
 }
 
 func (s *MongoPlayerStore) GetPlayerScore(name string) int {
 	player := Player{}
-	err := s.Client.
+	err := s.client.
 		Database("game").
 		Collection("players").
 		FindOne(context.TODO(), bson.M{"name": name}).
@@ -34,7 +35,7 @@ func (s *MongoPlayerStore) GetPlayerScore(name string) int {
 
 func (s *MongoPlayerStore) RecordWin(name string) {
 	ctx := context.TODO()
-	collection := s.Client.
+	collection := s.client.
 		Database("game").
 		Collection("players")
 	filter := bson.M{"name": name}
@@ -57,4 +58,26 @@ func (s *MongoPlayerStore) RecordWin(name string) {
 	default:
 		log.Fatal(err)
 	}
+}
+
+func NewMongoPlayerStore(ctx context.Context) (store *MongoPlayerStore, disconnect func(context.Context)) {
+	connectionURI := "mongodb://root:root@localhost:27017"
+	client, err := mongo.NewClient(options.Client().ApplyURI(connectionURI))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = client.Connect(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	disconnect = func(ctx context.Context) {
+		err := client.Disconnect(ctx)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	return &MongoPlayerStore{client}, disconnect
 }
