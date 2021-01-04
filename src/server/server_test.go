@@ -79,7 +79,7 @@ func assertScoreResponse(t *testing.T, response *httptest.ResponseRecorder, want
 	t.Helper()
 	got := response.Body.String()
 	if got != fmt.Sprint(want) {
-		t.Errorf("unexpected response: got %q want %q", got, want)
+		t.Errorf("unexpected response: got %s want %d", got, want)
 	}
 }
 
