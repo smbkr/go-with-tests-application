@@ -1,9 +1,12 @@
 package server
 
 import (
+	"application/src/model"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 )
 
@@ -69,14 +72,47 @@ func TestLeague(t *testing.T) {
 	store := &StubPlayerStore{}
 	server := NewPlayerServer(store)
 
-	t.Run("it returns 200 for /league", func(t *testing.T) {
+	t.Run("it returns a list of players", func(t *testing.T) {
+		expectedLeague := []model.Player{
+			{"Cleo", 30},
+			{"Chris", 20},
+			{"Charlie", 10},
+		}
+		store.league = expectedLeague
 		response := httptest.NewRecorder()
-		request, _ := http.NewRequest(http.MethodGet, "/league", nil)
+		request, _ := leagueRequest()
 
 		server.ServeHTTP(response, request)
 
+		got := decodeLeagueResponse(t, response)
 		assertStatus(t, response, http.StatusOK)
+		assertJsonHeader(t, response, "application/json")
+		assertLeagueMatches(t, got, expectedLeague)
 	})
+}
+
+func assertJsonHeader(t *testing.T, response *httptest.ResponseRecorder, expected string) {
+	t.Helper()
+	if response.Result().Header.Get("content-type") != expected {
+		t.Errorf("response has incorrect content type, got %q want %q", response.Result().Header, expected)
+	}
+}
+
+func assertLeagueMatches(t *testing.T, got []model.Player, expectedLeague []model.Player) {
+	t.Helper()
+	if !reflect.DeepEqual(got, expectedLeague) {
+		t.Errorf("got %v, want %v", got, expectedLeague)
+	}
+}
+
+func decodeLeagueResponse(t *testing.T, response *httptest.ResponseRecorder) []model.Player {
+	t.Helper()
+	var got []model.Player
+	err := json.NewDecoder(response.Body).Decode(&got)
+	if err != nil {
+		t.Fatalf("unable to parse response %q, %v", response.Body, err)
+	}
+	return got
 }
 
 func assertStatus(t *testing.T, response *httptest.ResponseRecorder, want int) {
@@ -105,16 +141,25 @@ func recordWinRequest(p string) *http.Request {
 	return r
 }
 
+func leagueRequest() (*http.Request, error) {
+	return http.NewRequest(http.MethodGet, "/league", nil)
+}
+
 type StubPlayerStore struct {
 	scores   map[string]int
 	winCalls []string
+	league   []model.Player
 }
 
-func (s *StubPlayerStore) GetPlayerScore(name string) int {
+func (s *StubPlayerStore) PlayerScore(name string) int {
 	score := s.scores[name]
 	return score
 }
 
 func (s *StubPlayerStore) RecordWin(name string) {
 	s.winCalls = append(s.winCalls, name)
+}
+
+func (s *StubPlayerStore) League() []model.Player {
+	return s.league
 }

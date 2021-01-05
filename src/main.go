@@ -9,7 +9,7 @@ import (
 
 func main() {
 	store := data.NewInMemoryPlayerStore()
-	handler := &server.PlayerServer{store}
+	handler := server.NewPlayerServer(store)
 	if err := http.ListenAndServe(":5000", handler); err != nil {
 		log.Fatalf("unable to listen on port :5000, %v", err)
 	}

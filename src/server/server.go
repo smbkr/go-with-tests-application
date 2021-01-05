@@ -1,6 +1,8 @@
 package server
 
 import (
+	"application/src/model"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -23,7 +25,8 @@ func NewPlayerServer(store PlayerStore) *PlayerServer {
 }
 
 func (p *PlayerServer) leagueHandler(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
+	w.Header().Set("content-type", "application/json")
+	json.NewEncoder(w).Encode(p.store.League())
 }
 
 func (p *PlayerServer) playerHandler(w http.ResponseWriter, r *http.Request) {
@@ -40,11 +43,10 @@ func (p *PlayerServer) playerHandler(w http.ResponseWriter, r *http.Request) {
 func (p *PlayerServer) playerWinHandler(w http.ResponseWriter, player string) {
 	p.store.RecordWin(player)
 	w.WriteHeader(http.StatusAccepted)
-	return
 }
 
 func (p *PlayerServer) playerScoreHandler(w http.ResponseWriter, player string) {
-	score := p.store.GetPlayerScore(player)
+	score := p.store.PlayerScore(player)
 	if score == 0 {
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -53,6 +55,7 @@ func (p *PlayerServer) playerScoreHandler(w http.ResponseWriter, player string) 
 }
 
 type PlayerStore interface {
-	GetPlayerScore(name string) int
+	PlayerScore(name string) int
 	RecordWin(name string)
+	League() []model.Player
 }

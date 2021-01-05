@@ -1,6 +1,7 @@
 package data
 
 import (
+	"application/src/model"
 	"context"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -9,15 +10,15 @@ import (
 )
 
 type Player struct {
-	Name  string `bson:"name"`
-	Score int    `bson:"score"`
+	Name string `bson:"name"`
+	Wins int    `bson:"score"`
 }
 
 type MongoPlayerStore struct {
 	client *mongo.Client
 }
 
-func (s *MongoPlayerStore) GetPlayerScore(name string) int {
+func (s *MongoPlayerStore) PlayerScore(name string) int {
 	player := Player{}
 	err := s.client.
 		Database("game").
@@ -30,7 +31,7 @@ func (s *MongoPlayerStore) GetPlayerScore(name string) int {
 		}
 	}
 
-	return player.Score
+	return player.Wins
 }
 
 func (s *MongoPlayerStore) RecordWin(name string) {
@@ -47,8 +48,8 @@ func (s *MongoPlayerStore) RecordWin(name string) {
 		return
 	case mongo.ErrNoDocuments:
 		player := Player{
-			Name:  name,
-			Score: 1,
+			Name: name,
+			Wins: 1,
 		}
 		res, err := collection.InsertOne(ctx, &player)
 		if err != nil {
@@ -58,6 +59,10 @@ func (s *MongoPlayerStore) RecordWin(name string) {
 	default:
 		log.Fatal(err)
 	}
+}
+
+func (s *MongoPlayerStore) League() []model.Player {
+	return []model.Player{}
 }
 
 func NewMongoPlayerStore(ctx context.Context) (store *MongoPlayerStore, disconnect func(context.Context)) {

@@ -1,5 +1,7 @@
 package data
 
+import "application/src/model"
+
 type InMemoryPlayerStore struct {
 	scores map[string]int
 }
@@ -10,10 +12,14 @@ func NewInMemoryPlayerStore() *InMemoryPlayerStore {
 	}
 }
 
-func (s *InMemoryPlayerStore) GetPlayerScore(name string) int {
+func (s *InMemoryPlayerStore) PlayerScore(name string) int {
 	return s.scores[name]
 }
 
 func (s *InMemoryPlayerStore) RecordWin(name string) {
 	s.scores[name]++
+}
+
+func (s *InMemoryPlayerStore) League() []model.Player {
+	return []model.Player{}
 }
