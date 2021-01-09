@@ -80,7 +80,7 @@ func TestLeague(t *testing.T) {
 		}
 		store.league = expectedLeague
 		response := httptest.NewRecorder()
-		request, _ := leagueRequest()
+		request := leagueRequest()
 
 		server.ServeHTTP(response, request)
 
@@ -141,8 +141,9 @@ func recordWinRequest(p string) *http.Request {
 	return r
 }
 
-func leagueRequest() (*http.Request, error) {
-	return http.NewRequest(http.MethodGet, "/league", nil)
+func leagueRequest() *http.Request {
+	r, _ := http.NewRequest(http.MethodGet, "/league", nil)
+	return r
 }
 
 type StubPlayerStore struct {

@@ -11,7 +11,7 @@ import (
 
 type Player struct {
 	Name string `bson:"name"`
-	Wins int    `bson:"score"`
+	Wins int    `bson:"wins"`
 }
 
 type MongoPlayerStore struct {
@@ -36,11 +36,9 @@ func (s *MongoPlayerStore) PlayerScore(name string) int {
 
 func (s *MongoPlayerStore) RecordWin(name string) {
 	ctx := context.TODO()
-	collection := s.client.
-		Database("game").
-		Collection("players")
+	collection := s.client.Database("game").Collection("players")
 	filter := bson.M{"name": name}
-	update := bson.M{"$inc": bson.M{"score": 1}}
+	update := bson.M{"$inc": bson.M{"wins": 1}}
 	result := collection.FindOneAndUpdate(ctx, filter, update)
 	err := result.Err()
 	switch err {
@@ -62,7 +60,19 @@ func (s *MongoPlayerStore) RecordWin(name string) {
 }
 
 func (s *MongoPlayerStore) League() []model.Player {
-	return []model.Player{}
+	var league []model.Player
+	ctx := context.TODO()
+	collection := s.client.Database("game").Collection("players")
+	projection := bson.M{"name": true, "wins": true}
+	opts := options.Find().SetProjection(projection)
+	cursor, err := collection.Find(ctx, bson.M{}, opts)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err = cursor.All(ctx, &league); err != nil {
+		log.Fatal(err)
+	}
+	return league
 }
 
 func NewMongoPlayerStore(ctx context.Context) (store *MongoPlayerStore, disconnect func(context.Context)) {

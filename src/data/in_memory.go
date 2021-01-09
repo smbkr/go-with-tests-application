@@ -21,5 +21,9 @@ func (s *InMemoryPlayerStore) RecordWin(name string) {
 }
 
 func (s *InMemoryPlayerStore) League() []model.Player {
-	return []model.Player{}
+	var league []model.Player
+	for name, wins := range s.scores {
+		league = append(league, model.Player{Name: name, Wins: wins})
+	}
+	return league
 }
